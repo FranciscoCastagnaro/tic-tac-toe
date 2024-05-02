@@ -1,4 +1,4 @@
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Square } from "./Square"
 
 export const Tablero = () => {
@@ -10,14 +10,17 @@ export const Tablero = () => {
 
     }
     
-
     const [tablero, setTablero] = useState([
                                             ['', '', ''], 
                                             ['', '', ''], 
                                             ['', '', '']
-                                        ])
+                                            ])
 
-    const [jugador, setJugador] = useState(Players.X)
+    const [jugador, setJugador] = useState(Players.O)
+
+    const [partidaActiva, setPartida] = useState(true);
+
+    const [ganador, setGanador] = useState('');
 
     const handleTablero = (filaIndex, columnaIndex) => {
 
@@ -26,15 +29,7 @@ export const Tablero = () => {
         const newTablero = tablero.map((fila) => [...fila]);
         newTablero[filaIndex][columnaIndex] = jugador;
 
-        // El segundo parámetro del 'Set' de useState es ejecutado cuando vuelve la llamada asíncrona
-        setTablero(newTablero, () => {
-            setJugador(jugador === Players.X ? Players.O : Players.X);
-    
-            const ganador = juegoTerminado();
-            if (ganador) {
-                console.log(ganador);
-            }
-        });
+        setTablero(newTablero);
 
     }
 
@@ -80,11 +75,36 @@ export const Tablero = () => {
     
     const clearTablero = () => {
 
-        setTablero(['', '', ''], 
-                   ['', '', ''], 
-                   ['', '', ''])
+        setTablero([
+                    ['', '', ''], 
+                    ['', '', ''], 
+                    ['', '', '']
+                    ])
+
+        setGanador('')
+
+        setPartida(true)
+
+        setJugador(Players.O)
 
     }
+
+    useEffect(() => {
+        
+        setJugador(jugador === Players.X ? Players.O : Players.X);
+        
+        const newGanador = juegoTerminado();
+        if (newGanador) {
+            setPartida(false)
+            if(newGanador == 'empate'){
+                setGanador('Hubo un empate!')
+            }else{
+                setGanador(`Felicidades al jugador ${newGanador}!`)
+            }
+        }
+        
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [tablero])
 
     return(
         <main className="w-96 h-[30rem] px-9 py-16 bg-slate-800 rounded-md grid grid-cols-1 grid-rows-3 shadow-2xl">
@@ -98,6 +118,13 @@ export const Tablero = () => {
                 >
                     Reiniciar
                 </button>
+
+                <h3 className="m-3 text-2xl font-bold text-white">
+                    {ganador ? 
+                        ganador 
+                        : ''}
+                </h3>
+
             </header>
 
             <div className="row-span-2 grid grid-cols-3 grid-rows-3 gap-2">
@@ -115,6 +142,7 @@ export const Tablero = () => {
                                 filaIndex={filaIndex}
                                 columnaIndex={columnaIndex}
                                 onclick={handleTablero}
+                                partidaActiva={partidaActiva}
                             />
                         );
 
